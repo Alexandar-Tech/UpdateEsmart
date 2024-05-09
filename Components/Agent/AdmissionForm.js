@@ -10,7 +10,6 @@ import {
   Dimensions
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
-import IconION from 'react-native-vector-icons/Ionicons';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_COURSE,API_GETRELIGION,API_GETCOMMUNITIES,API_GETBOARDS,
@@ -29,7 +28,6 @@ export function AdmissionForm({route,navigation}) {
   const runFirst = `window.ReactNativeWebView.postMessage("this is message from web");`;
   
   const AllData = route['params']['LoginData']
-  console.log(AllData)
   const token  = AllData['token']
   const OrgID = route['params']['org_id']
   const [chosenDateFrom, setChosenDateFrom] = useState(new Date());
@@ -62,7 +60,14 @@ export function AdmissionForm({route,navigation}) {
     const [showWebView, setShowWebView] = useState(true);
 
   const openWebView = () => {
-    setShowWebView(!showWebView);
+    if(valuePayment.length == 0){
+      setErrorMsg('Please Select Courses !')
+      setModalVisible(true)
+    }
+    else{
+      setShowWebView(!showWebView);
+    }
+    
   };
 
     const handleInputChange = (key, value) => {
@@ -178,17 +183,17 @@ export function AdmissionForm({route,navigation}) {
         setValueCourse(response.data.data)
       })
       .catch(error => {  
-        // console.log(error)   
       });
   }, []);
 
 
   useEffect(() => {
+    if(valueCourseID){
     axios.post(API_PAYMENT,{
       "user_id" : valueCourse[0].user_id,
       "org_id" : OrgID,
       "department_id" : valueCourseID,
-      "amount":valueCourseFees.fees,
+      "amount":100,
       "consultant_id" : AllData.id
     },
     {
@@ -201,8 +206,8 @@ export function AdmissionForm({route,navigation}) {
       setValuePayment(response.data.data)
     })
     .catch(error => {  
-      // console.log(error)  
     });
+  }
 }, [valueCourseID]);
 
       useEffect(() => {
@@ -220,7 +225,6 @@ export function AdmissionForm({route,navigation}) {
           setValueCourseFees(response.data.data)
         })
         .catch(error => {  
-          // console.log(error)  
         });
     }, [valueCourseID]);
 
@@ -701,10 +705,9 @@ export function AdmissionForm({route,navigation}) {
                   onLoad={()=>setLoading(false)}
                   onMessage={(event)=> {
                     if(event.nativeEvent.title.split('/')[3] == 'redirectAppSuccess'){
-                      console.log(event.nativeEvent.title.split('/')[3])
-                      admissonAppNavigation()
+                      navigation.goBack()
                     }else if(event.nativeEvent.title.split('/')[3] == 'redirectAppFailure') {
-                      navigation.navigate('Login')
+                      navigation.goBack()
                     }
                   }}
                 />

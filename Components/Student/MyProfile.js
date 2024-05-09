@@ -13,6 +13,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_UPDATESTUDENTPROFILE,API_GETRELIGION,API_GETCOMMUNITIES } from '../../APILIST/APILIST';
 import Modal from "react-native-modal";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export function MyProfile({route,navigation}) {
     const ProfileData = route['params']['LoginData']
@@ -25,7 +26,9 @@ export function MyProfile({route,navigation}) {
     const [valueReligion, setValueReligion] = useState(null);
     const [valueCommunity, setValueCommunity] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false); 
-    const [errorMsg,setErrorMsg] = useState(null);   
+    const [errorMsg,setErrorMsg] = useState(null);  
+    const [showDatePicker, setShowDatePicker] = useState(false); 
+    const [chosenDateFrom, setChosenDateFrom] = useState(new Date());
 
     const handleInputChange = (key, value) => {
         setInputValues((prevData) => {
@@ -59,6 +62,38 @@ export function MyProfile({route,navigation}) {
         { name: 'Male', id: '1' },
         { name: 'Female', id: '2' },
     ]
+
+    const DatePickerExample = () => {
+      const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+    
+        if (selectedDate) {
+          setChosenDateFrom(selectedDate);
+        }
+      };
+    
+      const showDatepicker = () => {
+        setShowDatePicker(true);
+      };
+    
+      return (
+        <TouchableOpacity onPress={showDatepicker} style={[styles.inputView,{alignItems:'center',justifyContent:'center'}]}>
+              <Text style={{ fontSize: 13,fontWeight:'bold',color:'#1D2F59' }}>                
+                  {chosenDateFrom.toISOString().split('T')[0]}
+              </Text>  
+          {showDatePicker && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={chosenDateFrom}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
+        </TouchableOpacity>
+      );
+    };
 
     const onHandleSubmit = async () =>{      
       inputValues['user_id'] = user_id
@@ -217,13 +252,22 @@ export function MyProfile({route,navigation}) {
                     <View style={{alignSelf:'center',margin:10}}>
                         <Image source={require('../../assets/College/ProfilePic.png')} style={{height:100,width:100,resizeMode:'contain'}}  />
                     </View>
-                    <Text style={styles.textcss}>Name</Text>
+                    <Text style={styles.textcss}>First Name</Text>
                     <View style={[styles.inputView]}>
                         <TextInput
                         style={styles.TextInput}
-                        // placeholder="Name"
+                        // placeholder="First Name"
                         // placeholderTextColor="#003f5c"
-                        onChangeText={(text)=>handleInputChange('name',text)}
+                        onChangeText={(text)=>handleInputChange('firstname',text)}
+                        />
+                    </View>
+                    <Text style={styles.textcss}>Last Name</Text>
+                    <View style={[styles.inputView]}>
+                        <TextInput
+                        style={styles.TextInput}
+                        // placeholder="Last Name"
+                        // placeholderTextColor="#003f5c"
+                        onChangeText={(text)=>handleInputChange('lastname',text)}
                         />
                     </View>
                     <Text style={styles.textcss}>Father/Guardians Name</Text>
@@ -245,27 +289,70 @@ export function MyProfile({route,navigation}) {
                         onChangeText={(text)=>handleInputChange('address',text)}
                         />
                     </View>
-                    
-                    <Text style={styles.textcss}>Student Mobile number</Text>
-                    <View style={[styles.inputView]}>
-                        <TextInput
-                        style={styles.TextInput}
-                        // placeholder="Student Mobile number"
-                        // placeholderTextColor="#003f5c"
-                        onChangeText={(text)=>handleInputChange('phone_number',text)}
-                        />
-                    </View>
+                    {
+                      ProfileData.type == 0?(
+                        <View>
+                          <Text style={styles.textcss}>Student Mobile number</Text>
+                          <View style={[styles.inputView]}>
+                              <TextInput
+                              style={styles.TextInput}
+                              // placeholder="Student Mobile number"
+                              // placeholderTextColor="#003f5c"
+                              inputMode="numeric"
+                              maxLength={10}
+                              onChangeText={(text)=>handleInputChange('phone_number',text)}
+                              />
+                          </View>
+                          <Text style={styles.textcss}>Parent Mobile number</Text>
+                          <View style={[styles.inputView]}>
+                              <TextInput
+                              style={styles.TextInput}
+                              inputMode="numeric"
+                              maxLength={10}
+                              // placeholder="Parent Mobile number"
+                              // placeholderTextColor="#003f5c"
+                              onChangeText={(text)=>handleInputChange('parent_phone_number',text)}
+                              />
+                          </View>
+                          
+                          
+                          <Text style={styles.textcss}>Religion</Text>
+                          <View style={{width:'100%',marginRight:20,marginLeft:20,marginTop:10,alignSelf:'center'}}>
+                              <DropdownComponentReligion name={'Religion'} dropDownData={religion}/>
+                          </View> 
+                          <Text style={styles.textcss}>Community</Text>
+                          <View style={{width:'100%',marginRight:20,marginLeft:20,marginTop:10,alignSelf:'center'}}>
+                              <DropdownComponentCommunity name={'Community'} dropDownData={community}/>
+                          </View>
+                          <Text style={styles.textcss}>Caste</Text>
+                          <View style={[styles.inputView]}>
+                              <TextInput
+                              style={styles.TextInput}
+                              // placeholder="Caste"
+                              // placeholderTextColor="#003f5c"
+                              onChangeText={(text)=>handleInputChange('caste',text)}
+                              />
+                          </View>
+                        </View>
 
-                    <Text style={styles.textcss}>Parent Mobile number</Text>
-                    <View style={[styles.inputView]}>
-                        <TextInput
-                        style={styles.TextInput}
-                        // placeholder="Parent Mobile number"
-                        // placeholderTextColor="#003f5c"
-                        onChangeText={(text)=>handleInputChange('parent_phone_number',text)}
-                        />
-                    </View>
-
+                      ):(
+                        <View>
+                          <Text style={styles.textcss}>Mobile number</Text>
+                          <View style={[styles.inputView]}>
+                              <TextInput
+                              style={styles.TextInput}
+                              inputMode="numeric"
+                              maxLength={10}
+                              onChangeText={(text)=>handleInputChange('phone_number',text)}
+                              />
+                          </View>
+                        </View>
+                      )
+                    }
+                    <Text style={styles.textcss}>Gender</Text>
+                    <View style={{width:'100%',marginRight:20,marginLeft:20,marginTop:10,alignSelf:'center'}}>
+                        <DropdownComponent name={'Gender'} dropDownData={Genderdata}/>
+                    </View> 
                     <Text style={styles.textcss}>Email</Text>
                     <View style={[styles.inputView]}>
                         <TextInput
@@ -275,44 +362,40 @@ export function MyProfile({route,navigation}) {
                         onChangeText={(text)=>handleInputChange('email',text)}
                         />
                     </View>
+
+                    <View style={{marginTop:5}}>
+                      <Text style={styles.textcss}>Date Of Birth</Text>
+                      <View>
+                        <DatePickerExample />
+                      </View>
+                    </View>                    
                     
-                    <Text style={styles.textcss}>Gender</Text>
-                    <View style={{width:'100%',marginRight:20,marginLeft:20,marginTop:10,alignSelf:'center'}}>
-                        <DropdownComponent name={'Gender'} dropDownData={Genderdata}/>
-                    </View> 
-                    <Text style={styles.textcss}>Religion</Text>
-                    <View style={{width:'100%',marginRight:20,marginLeft:20,marginTop:10,alignSelf:'center'}}>
-                        <DropdownComponentReligion name={'Religion'} dropDownData={religion}/>
-                    </View> 
-                    <Text style={styles.textcss}>Community</Text>
-                    <View style={{width:'100%',marginRight:20,marginLeft:20,marginTop:10,alignSelf:'center'}}>
-                        <DropdownComponentCommunity name={'Community'} dropDownData={community}/>
-                    </View>
-                    <Text style={styles.textcss}>Caste</Text>
-                    <View style={[styles.inputView]}>
-                        <TextInput
-                        style={styles.TextInput}
-                        // placeholder="Caste"
-                        // placeholderTextColor="#003f5c"
-                        onChangeText={(text)=>handleInputChange('caste',text)}
-                        />
-                    </View>
                     <Text style={styles.textcss}>AAdhar Number</Text>
                     <View style={[styles.inputView]}>
                         <TextInput
                         style={styles.TextInput}
+                        inputMode="numeric"
+                        maxLength={12}
                         // placeholder="AAdhar Number"
                         // placeholderTextColor="#003f5c"
                         onChangeText={(text)=>handleInputChange('aadhar_number',text)}
                         />
                     </View>
-                    <Text style={styles.textcss}>Parent Annual Income</Text>
-                    <View style={[styles.inputView]}>
-                        <TextInput
-                          style={styles.TextInput}
-                          onChangeText={(text)=>handleInputChange('aadhar_number',text)}
-                        />
-                    </View>                     
+                    {
+                      ProfileData.type == 0?(
+                        <View>
+                          <Text style={styles.textcss}>Parent Annual Income</Text>
+                          <View style={[styles.inputView]}>
+                              <TextInput
+                                style={styles.TextInput}
+                                onChangeText={(text)=>handleInputChange('aadhar_number',text)}
+                              />
+                          </View> 
+                        </View>
+
+                      ):null
+                    }
+                                        
                 </View>
             </ScrollView>
             
@@ -392,7 +475,8 @@ const styles = StyleSheet.create({
         marginTop:20,
         marginLeft:5,
         marginRight:5,
-        bottom:6
+        bottom:6,
+        backgroundColor:'#fff'
       },
       TextInput: {
         height: 40,
