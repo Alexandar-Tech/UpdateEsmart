@@ -114,6 +114,38 @@ export function MyProfile({route,navigation}) {
       );
     };
 
+    const DatePickerExample = () => {
+      const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+    
+        if (selectedDate) {
+          setChosenDateFrom(selectedDate);
+        }
+      };
+    
+      const showDatepicker = () => {
+        setShowDatePicker(true);
+      };
+    
+      return (
+        <TouchableOpacity onPress={showDatepicker} style={[styles.inputView,{alignItems:'center',justifyContent:'center'}]}>
+              <Text style={{ fontSize: 13,fontWeight:'bold',color:'#1D2F59' }}>                
+                  {chosenDateFrom.toISOString().split('T')[0]}
+              </Text>  
+          {showDatePicker && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={chosenDateFrom}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
+        </TouchableOpacity>
+      );
+    };
+
     const onHandleSubmit = async () =>{     
       // console.log(JSON.stringify({
       //   "aadhar_number": aadharNumber,
@@ -522,6 +554,8 @@ const styles = StyleSheet.create({
         marginTop:20,
         marginLeft:5,
         marginRight:5,
+        bottom:6,
+        backgroundColor:'#fff'
         bottom:6,
         backgroundColor:'#fff'
       },

@@ -726,7 +726,9 @@ export function AdmissionForm({route,navigation}) {
                   onMessage={(event)=> {
                     if(event.nativeEvent.title.split('/')[3] == 'redirectAppSuccess'){
                       navigation.goBack()
+                      navigation.goBack()
                     }else if(event.nativeEvent.title.split('/')[3] == 'redirectAppFailure') {
+                      navigation.goBack()
                       navigation.goBack()
                     }
                   }}
