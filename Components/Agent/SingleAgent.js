@@ -80,8 +80,7 @@ export function SingleAgent({route,navigation}) {
         .then(response => {
             setValueCourse(response.data.data)
         })
-        .catch(error => {  
-          // console.log(error)    
+        .catch(error => {    
         });
     }
     

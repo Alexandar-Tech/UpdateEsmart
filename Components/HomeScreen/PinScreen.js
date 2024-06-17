@@ -5,11 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  AsyncStorage
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
-import { API_VERIFYOTP,API_SENTOTP,API_SETPIN } from '../../APILIST/APILIST';
+import { API_SETPIN } from '../../APILIST/APILIST';
 import Modal from "react-native-modal";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function PinScreen({route,navigation}) {
     const [otp, setOTP] = useState(['', '', '', '',]); // State to store OTP digits
@@ -63,8 +63,11 @@ export function PinScreen({route,navigation}) {
                 "confirm_pin" : confirmvalidatepin
             }),    
         })
-        const response = await resp.json(); 
+        const response = await resp.json();
         if (response.success == '1'){
+            AsyncStorage.setItem('isLoggedIn', JSON.stringify(true));
+              const jsonValue = JSON.stringify(response.data);
+              await AsyncStorage.setItem('LoginData', jsonValue);
             if(response.is_register == 1){
                 navigation.navigate('AdmissionSignup',{
                     number:route['params']['number']

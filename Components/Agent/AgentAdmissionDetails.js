@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
 import axios from 'axios';
-import { API_ADMISSIONDETAIL,API_ADMISSIONDETAILUSER } from '../../APILIST/APILIST';
+import { API_ADMISSIONDETAIL } from '../../APILIST/APILIST';
+import { StatusBar } from 'expo-status-bar';
 
 
 export function AgentAdmissionDetail({route,navigation}) {   
@@ -34,14 +35,14 @@ export function AgentAdmissionDetail({route,navigation}) {
         .then(response => {
             setAdmissionData(response.data.data)
         })
-        .catch(error => {             
-          console.log(error.response)    
+        .catch(error => {              
         });
     }, []);
     
 
     return(
         <View style={{flex:1}}>
+            <StatusBar style='auto' />
             <View style={styles.headerPad}>
                 <View style={styles.headpadCss}>
                     <TouchableOpacity onPress={()=>navigation.goBack()} style={{width:'20%'}}>

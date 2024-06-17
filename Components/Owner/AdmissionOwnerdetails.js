@@ -49,10 +49,7 @@ export function AdmissionOwnerDetails({route,navigation}) {
           if(response.success ==1){
             setAdmissionData(response.data)
           }
-          
-        //   setAdmissionData(response.data.data)
     }
-
 
     const toggledata = (val) =>{
         
@@ -165,7 +162,7 @@ export function AdmissionOwnerDetails({route,navigation}) {
             <ScrollView style={{flex:1}}>
                 <View style={{padding:20}}>
                 {
-                        admissionData?(
+                        admissionData != null?(
                             <View>
                                 {
                                     selectedIndex?(
@@ -177,21 +174,26 @@ export function AdmissionOwnerDetails({route,navigation}) {
                                                     <View style={styles.card} key={index}> 
                                                         <View style={{flexDirection:'row',justifyContent:'space-between',margin:5}}>
                                                             <Text style={{fontSize:17,color:'#313955',fontWeight:'bold',paddingLeft:10,paddingTop:20}}>{item.user_detail.name}</Text>
-                                                            <Text style={{fontSize:14,color:'#313955',fontWeight:'bold',paddingTop:20}}>Consultancy name</Text>
+                                                            <Text style={{fontSize:14,color:'#313955',fontWeight:'bold',paddingTop:20}}>{item.consultancy_agency.consultancy_agency_name}</Text>
                                                         </View>
-                                                        <View style={{flexDirection:'row',justifyContent:'space-between',margin:5}}>
-                                                        <Text style={{fontSize:14,color:'#1DA79B',fontWeight:'bold',paddingLeft:15,bottom:5}}>{item.department.name}</Text>
-                                                            <Text style={{fontSize:12,color:'#313955',fontWeight:'bold',bottom:5}}>{item.consultancy_agency.consultancy_agency_name}</Text>
-                                                        </View>
+                                                        {
+                                                            item.department?(
+                                                                <View style={{flexDirection:'row',justifyContent:'space-between',margin:5}}>
+                                                                    <Text style={{fontSize:14,color:'#1DA79B',fontWeight:'bold',paddingLeft:8}}>{item.department.name}</Text>
+                                                                </View>
+                                                            ):null
+                                                        }                                                       
 
-                                                        <View style={{flexDirection:'row',justifyContent:'space-around',margin:10,top:20}}>
-                                                            <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Date:</Text>
-                                                                <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
-                                                            </View>
-                                                            <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Time:</Text>
-                                                                <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
+                                                        <View style={{flexDirection:'row',justifyContent:'space-between',margin:10}}>
+                                                        <View>
+                                                                <View style={{flexDirection:'row',paddingLeft:8}}>
+                                                                    <Text style={[styles.cardtextCss,{}]}>Date: </Text>
+                                                                    <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
+                                                                </View>
+                                                                <View style={{flexDirection:'row',paddingLeft:8}}>
+                                                                    <Text style={[styles.cardtextCss,{}]}>Time: </Text>
+                                                                    <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
+                                                                </View>
                                                             </View>
                                                             <View style={{flexDirection:'row'}}>
                                                                 <Text style={[styles.cardtextCss,{color:'#313955'}]}>Paid:</Text>
@@ -199,14 +201,17 @@ export function AdmissionOwnerDetails({route,navigation}) {
                                                             </View>
                                                         </View>
                                                     </View>                            
-                                                ))):(
-                                                    <View style={{justifyContent:'center',alignItems:'center',flex:1,backgroundColor:'#313955',padding:15,borderRadius:10,top:10}}>
-                                                        <Text style={{fontSize:18,fontWeight:'bold',color:'#fff'}}>No Admission Found!!</Text>
+                                                )
+                                            )
+                                        ):(
+                                                    <View style={{alignItems:'center',marginTop:100}}>
+                                                        <Image source={require('../../assets/HomeScreen/NoData.png')} style={{height:200,width:'80%',borderRadius:10}}  />
                                                     </View>
                                                 )
                                             }
                                         </View>
-                                    ):(
+                                    ):
+                                    (
                                         <View>
                                             {  
                                             admissionData.canceled.length != 0?(                                         
@@ -224,11 +229,11 @@ export function AdmissionOwnerDetails({route,navigation}) {
 
                                                         <View style={{flexDirection:'row',justifyContent:'space-around',margin:10,top:20}}>
                                                             <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Date:</Text>
+                                                                <Text style={[styles.cardtextCss,{}]}>Date:</Text>
                                                                 <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
                                                             </View>
                                                             <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Time:</Text>
+                                                                <Text style={[styles.cardtextCss,{}]}>Time:</Text>
                                                                 <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
                                                             </View>
                                                             <View style={{flexDirection:'row'}}>
@@ -238,8 +243,8 @@ export function AdmissionOwnerDetails({route,navigation}) {
                                                         </View>
                                                     </View>                            
                                                 ))):(
-                                                    <View style={{justifyContent:'center',alignItems:'center',flex:1,backgroundColor:'#313955',padding:15,borderRadius:10,top:10}}>
-                                                        <Text style={{fontSize:18,fontWeight:'bold',color:'#fff'}}>No Admission Found!!</Text>
+                                                    <View style={{alignItems:'center',marginTop:100}}>
+                                                        <Image source={require('../../assets/HomeScreen/NoData.png')} style={{height:200,width:'80%',borderRadius:10}}  />
                                                     </View>
                                                 )
                                             }
@@ -264,13 +269,13 @@ export function AdmissionOwnerDetails({route,navigation}) {
 
 const styles = StyleSheet.create({
     card:{
-        height:150,
         width:'100%',
         alignSelf:'center',
         backgroundColor:'#F7F8FA',
         borderRadius:10,
-        margin:10
-    },
+        margin:10,
+        paddingBottom:20   
+     },
     textcss:{
         fontSize:18,
         fontWeight:'bold',

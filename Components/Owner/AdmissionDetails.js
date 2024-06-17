@@ -12,12 +12,12 @@ import {
 import Icon from 'react-native-vector-icons/Entypo';
 import axios from 'axios';
 import { API_OWNERDETAILS } from '../../APILIST/APILIST';
-
+import { StatusBar } from 'expo-status-bar';
 
 export function AdmissionDetail({route,navigation}) {   
-    const AllData = route['params']['LoginData']
-    const OrgID = route['params']['org_id']
-    const token  = AllData['token']
+    const AllData = route.params.LoginData
+    const OrgID = AllData.org[0].id
+    const token  = AllData.token
     const [admissionData,setAdmissionData] = useState(null)
 
     useEffect(() => {
@@ -34,18 +34,18 @@ export function AdmissionDetail({route,navigation}) {
         .then(response => {
             setAdmissionData(response.data.data)
         })
-        .catch(error => {             
-          console.log(error.response)    
+        .catch(error => {                
         });
     }, []);
     
 
     return(
         <View style={{flex:1}}>
+            <StatusBar style='auto' />
             <View style={styles.headerPad}>
                 <View style={styles.headpadCss}>
-                    <TouchableOpacity onPress={()=>navigation.goBack()} style={{width:'20%'}}>
-                        <View style={styles.headpad}>
+                    <TouchableOpacity>
+                        <View style={[styles.headpad,{opacity:0}]}>
                             <Icon name="chevron-left" size={30}/>
                         </View>
                     </TouchableOpacity>

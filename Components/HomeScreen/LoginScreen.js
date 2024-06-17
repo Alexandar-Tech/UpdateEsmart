@@ -8,7 +8,8 @@ import {
   TextInput,
   Dimensions,
   Keyboard,
-  LogBox
+  LogBox,
+  RefreshControl
 } from 'react-native';
 import axios from 'axios';
 import Checkbox from 'expo-checkbox';
@@ -60,6 +61,14 @@ export default function HomepageLoginScreen() {
       setPhoneNumber(val)
     }
 
+    const [refreshing, setRefreshing] = React.useState(true);
+const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
     const toggleOTP = () =>{        
         if(!isChecked){
             setErrorMsg('Please Check terms and Conditions !')
@@ -81,6 +90,14 @@ export default function HomepageLoginScreen() {
             })    
             const response = await resp.json();
             if (response.success == '1'){
+              if(response.is_register == 1){
+                navigation.navigate('OTPScreen',{
+                  Number:phoneNumber,
+                  PIN:response.pin
+              }) 
+              return                    
+              }
+
               if(response.pin == 0 && response.data != undefined){
                   navigation.navigate('PinScreen',{
                     UserId:response.data.id,
@@ -98,10 +115,7 @@ export default function HomepageLoginScreen() {
                 }) 
                 return
               }
-              navigation.navigate('OTPScreen',{
-                Number:phoneNumber,
-                PIN:response.pin
-            })     
+              
             }else{
               setErrorMsg(response.msg)
               setModalVisible(true)
@@ -136,7 +150,11 @@ export default function HomepageLoginScreen() {
     };
 
       return(
-        <View style={{backgroundColor:'#313955',paddingBottom:20,flex:1}}>
+        <View style={{backgroundColor:'#313955',paddingBottom:20,flex:1}}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        >
 
         {
             isScreen?(
@@ -161,10 +179,10 @@ export default function HomepageLoginScreen() {
                         </Modal>
                         <StatusBar style='auto' />
                         <KeyboardAwareScrollView >
-                            <View style={{height:windowHeight/1.5}}>
+                            <View style={{height:windowHeight/1.54}}>
                                 <Image style={styles.logo} source={require('../../assets/HomeScreen/splash_header_image.png')} />
                             </View>
-                            <View style={{height:40}}>
+                            <View style={{height:20}}>
 
                             </View>
                             
@@ -241,7 +259,8 @@ export default function HomepageLoginScreen() {
     borderRadius: 10,
     height:50,
     width:'90%',
-    alignSelf:'center'
+    alignSelf:'center',
+    bottom:5
   },
   logo: {
     height:'100%',
@@ -340,7 +359,7 @@ export default function HomepageLoginScreen() {
   modelView:{
     backgroundColor: 'white', 
     padding: 16,
-    height:170,
+    height:200,
     borderRadius:20,
     alignItems:'center'
   },

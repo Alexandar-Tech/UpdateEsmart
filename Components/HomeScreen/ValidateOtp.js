@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef,useEffect } from 'react';
 import {
   Text,
   View,
@@ -7,8 +7,9 @@ import {
   TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
-import { API_VALIDATEPIN } from '../../APILIST/APILIST';
+import { API_VALIDATEPIN,API_FORGETPIN } from '../../APILIST/APILIST';
 import Modal from "react-native-modal";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function ValidateOtp({route,navigation}) {
 
@@ -32,15 +33,26 @@ export function ValidateOtp({route,navigation}) {
           inputRefs.current[index + 1].focus();
         }
       };
-     
 
-      const storeData = async (value) => {
-        try {
-          await AsyncStorage.setItem('isLoggedIn', true);
-        } catch (e) {
-          // saving error
-        }
-      };
+      const ForgetPIN = async () => {
+        const resp = await fetch(API_FORGETPIN,{
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              "phone_no" : route['params']['number'], 
+            }),
+          })    
+          const response = await resp.json();
+          if(response.success == 1){
+            navigation.navigate('OTPScreen',{
+                Number:route['params']['number'],
+                PIN:0
+            })
+          }    
+      }
 
       const fetchData = async (OTP) => {
             const resp = await fetch(API_VALIDATEPIN,{
@@ -57,7 +69,12 @@ export function ValidateOtp({route,navigation}) {
             })    
             const response = await resp.json();
             if (response.success == '1'){
-                storeData()
+              AsyncStorage.setItem('isLoggedIn', JSON.stringify(true));
+              const jsonValue = JSON.stringify(response.data);              
+              await AsyncStorage.setItem('LoginData', jsonValue);
+              const dataval = await AsyncStorage.getItem('LoginData'); 
+       
+      
                 if(response.is_register == 1){
                     navigation.navigate('AdmissionSignup',{
                         number:PhoneNumber
@@ -74,16 +91,19 @@ export function ValidateOtp({route,navigation}) {
                         return
                     }
                     if(response.msg == 'Your login successfully as owner'){
-                        navigation.navigate('AgentAdmissionDetailS',{
-                            LoginData : response.data,
-                            userid:response.data.id,
-                            org_id :response.data.org[0].id
-                        })
-                        return
+                        // navigation.navigate('AgentAdmissionDetailS',{
+                        //     LoginData : response.data,
+                        //     userid:response.data.id,
+                        //     org_id :response.data.org[0].id
+                        // })
+                        // return
+
+                        navigation.navigate('BottomTabStack',{
+                          LoginData : response.data
+                      })
                     }
                     navigation.navigate('BottomTabStack',{
-                        LoginData : response.data,
-                        userid:response.data.id
+                        LoginData : response.data
                     })
                     
                 }
@@ -172,10 +192,7 @@ export function ValidateOtp({route,navigation}) {
                 ))}
             </View>
 
-            <TouchableOpacity onPress={()=>navigation.navigate('OTPScreen',{
-                Number:PhoneNumber,
-                PIN:0
-            })}>
+            <TouchableOpacity onPress={()=>ForgetPIN()}>
                 <Text style={{fontSize:16,color:'#FCB301',textAlign:'right',marginRight:30,fontWeight:'bold',textDecorationLine:'underline'}}>Forget PIN?</Text>
             </TouchableOpacity>
 

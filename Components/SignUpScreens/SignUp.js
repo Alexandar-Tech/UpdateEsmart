@@ -12,6 +12,7 @@ import Checkbox from 'expo-checkbox';
 import { API_REGISTERUSER } from '../../APILIST/APILIST';
 import { RadioButton } from 'react-native-paper';
 import Modal from "react-native-modal";
+import { StatusBar } from 'expo-status-bar';
 
 export function AdmissionSignup({route,navigation}) {
     const phoneNumber = route['params']['number']
@@ -54,7 +55,11 @@ export function AdmissionSignup({route,navigation}) {
         }
         if (response.success == '1'){ 
             setErrorMsg(response.msg)
-            setModalVisible(true)        
+            setModalVisible(true)   
+            setTimeout(() => {
+                setModalVisible(false)   
+                navigation.navigate('Login')      
+              }, 2000)     
         }else{
             setErrorMsg(response.msg)
             setModalVisible(true)
@@ -63,6 +68,7 @@ export function AdmissionSignup({route,navigation}) {
       
     return(
         <View style={{flex:1,backgroundColor:'#F7F8FA'}}>
+            <StatusBar style='auto' />
             <View style={{flex:1}}>
             <Modal 
                 isVisible={isModalVisible}
@@ -127,7 +133,7 @@ export function AdmissionSignup({route,navigation}) {
                             />
                         </View>
                     </View>
-                    <Text style={styles.textcss}>Last Name (Optinal)</Text>
+                    <Text style={styles.textcss}>Last Name</Text>
                     <View style={[styles.inputView]}>
                         <TextInput
                         style={styles.TextInput}

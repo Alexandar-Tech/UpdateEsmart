@@ -7,14 +7,17 @@ import { API_COLLEGELISTAGENT,API_SENTCOLLEGELISTAGENT } from '../../APILIST/API
 import { ButtonGroup } from '@rneui/themed';
 import Modal from "react-native-modal";
 import MultiCheckBox from './MultipleCheckBox';
+import { StatusBar } from 'expo-status-bar';
 
 export function CollegeAgent({route,navigation}) {  
     const ViewAdmission = route['params']['LoginData']['view_admisson']
     let user_id = route['params']['LoginData']['id']
-    
+    let agent_id = null
+    let token = route['params']['LoginData']['token']
     const agentFormFull = route['params']['LoginData']['parent_agent_id']
     if(agentFormFull != null ){
         user_id = route['params']['LoginData']['parent_agent_id']
+        agent_id = route['params']['LoginData']['id']
     }
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -51,7 +54,8 @@ export function CollegeAgent({route,navigation}) {
         if(agentFormFull !=null){
             navigation.navigate('AgentDetails',{
                 org_id:orgId,
-                LoginData:route['params']['LoginData']
+                LoginData:route['params']['LoginData'],
+                type:'agent'
             })
         }else(
             navigation.navigate('AgentAdmissionDetail',{
@@ -65,6 +69,7 @@ export function CollegeAgent({route,navigation}) {
     useEffect(() => {
         axios.post(API_COLLEGELISTAGENT,{
             "user_id" : user_id,
+            "agent_id":agent_id,
             "search" : searchText
         })
         .then(response => {
@@ -103,6 +108,7 @@ export function CollegeAgent({route,navigation}) {
 
     return(
         <>
+        <StatusBar style='auto' />
                     <Modal 
                     isVisible={isModalVisible}
                     style={styles.modelcontainer}
@@ -147,10 +153,11 @@ export function CollegeAgent({route,navigation}) {
                               </View>
                         </Modal>
                 <View style={{ flex: 1}}>
+                <StatusBar style='auto' />
                     <View style={styles.headerPad}>
                         <View style={styles.headpadCss}>
-                            <TouchableOpacity onPress={()=>navigation.goBack()} style={{width:'20%'}}>
-                                <View style={styles.headpad}>
+                            <TouchableOpacity style={{width:'20%'}}>
+                                <View style={[styles.headpad,{opacity:0}]}>
                                     <Icon name="chevron-left" size={30}/>
                                 </View>
                             </TouchableOpacity>
@@ -210,7 +217,8 @@ export function CollegeAgent({route,navigation}) {
                                                     <IconMC name="filter-menu-outline" size={30} style={{bottom:5}}/>
                                                     </TouchableOpacity> */}
                                                     <TouchableOpacity style={{padding:10,backgroundColor:'#313955',borderRadius:10,margin:5}} onPress={()=>navigation.navigate('AgentSignUp',{
-                                                        consultantid : user_id
+                                                        consultantid : user_id,
+                                                        token:token
                                                     })}>
                                                         <Text style={{color:'#fff',fontWeight:'bold'}}>Add Agent</Text>
                                                     </TouchableOpacity>
@@ -260,9 +268,9 @@ export function CollegeAgent({route,navigation}) {
                                                                                 <Icon name="location-pin" size={20} color={'#313955'}/>
                                                                                 <Text style={{fontSize:13,fontWeight:'bold',color:'#313955'}}>{item.city.name}</Text>
                                                                             </View>
-                                                                            <View style={{alignSelf:'flex-end',height:30,width:30,backgroundColor:'#FCB301',borderRadius:20,alignItems:'center',justifyContent:'center'}}>
+                                                                            {/* <View style={{alignSelf:'flex-end',height:30,width:30,backgroundColor:'#FCB301',borderRadius:20,alignItems:'center',justifyContent:'center'}}>
                                                                                 <IconMC name='navigation-variant' size={20} color={'#fff'}/>                                                                    
-                                                                            </View>
+                                                                            </View> */}
                                                                         </View>
                                                                     </View>    
                                                                 </View>                                                    
@@ -290,9 +298,9 @@ export function CollegeAgent({route,navigation}) {
                                                                         </View>
                                                                         
                                                                         <View style={{width:'50%',margin:10}}>
-                                                                            <View style={{padding:5}}>
-                                                                                <View style={{padding:8,backgroundColor:'#FCB301',borderRadius:10,alignItems:'center',justifyContent:'center'}}>
-                                                                                    <Text style={{fontSize:14,fontWeight:'bold'}}>Associated</Text>
+                                                                            <View style={{padding:5,left:8}}>
+                                                                                <View style={{height:25,backgroundColor:'#FCB301',borderRadius:10,alignItems:'center',justifyContent:'center',width:100}}>
+                                                                                    <Text style={{fontSize:12,fontWeight:'bold'}}>Associated</Text>
                                                                                 </View>
                                                                             </View>   
                                                                             <Text style={{fontSize:15,fontWeight:'bold',color:'#313955',padding:10}}>{item.name}</Text>
@@ -319,9 +327,9 @@ export function CollegeAgent({route,navigation}) {
                                                                                     <Text style={{fontSize:12,fontWeight:'bold',color:'#313955'}}>{item.city.name}</Text>
                                                                                 </View>
                                                                                 <View style={{}}>
-                                                                                    <View style={{alignSelf:'flex-end',height:30,width:30,backgroundColor:'#FCB301',borderRadius:20,alignItems:'center',justifyContent:'center'}}>
+                                                                                    {/* <View style={{alignSelf:'flex-end',height:30,width:30,backgroundColor:'#FCB301',borderRadius:20,alignItems:'center',justifyContent:'center'}}>
                                                                                         <IconMC name='navigation-variant' size={20} color={'#fff'}/>                                                                    
-                                                                                    </View>
+                                                                                    </View> */}
                                                                                 </View>
                                                                             </View>
                                                                         </View>    
@@ -397,7 +405,7 @@ const styles = StyleSheet.create({
     width:'100%',
     borderWidth:1,
     alignSelf:'center',
-    borderRadius:20
+    borderRadius:10
   },
   TextInput: {
     height: 40,

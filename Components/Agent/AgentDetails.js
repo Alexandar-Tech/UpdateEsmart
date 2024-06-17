@@ -79,8 +79,7 @@ export function AgentDetails({route,navigation}) {
         .then(response => {
             setValueCourse(response.data.data)
         })
-        .catch(error => {  
-          // console.log(error)    
+        .catch(error => {    
         });
     }
     
@@ -174,14 +173,16 @@ export function AgentDetails({route,navigation}) {
                                                     <View style={styles.card} key={index}>     
                                                         <Text style={{fontSize:17,color:'#313955',fontWeight:'bold',paddingLeft:15,paddingTop:20}}>{item.user_detail.name}</Text>
                                                         <Text style={{fontSize:14,color:'#1DA79B',fontWeight:'bold',paddingLeft:15,paddingTop:5}}>{item.department.name}</Text>
-                                                        <View style={{flexDirection:'row',justifyContent:'space-around',margin:10,top:20}}>
-                                                            <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Date:</Text>
-                                                                <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
-                                                            </View>
-                                                            <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Time:</Text>
-                                                                <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
+                                                        <View style={{flexDirection:'row',justifyContent:'space-between',margin:10,top:20}}>
+                                                            <View>
+                                                                <View style={{flexDirection:'row',bottom:5}}>
+                                                                    <Text style={[styles.cardtextCss,{}]}>Date: </Text>
+                                                                    <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
+                                                                </View>
+                                                                <View style={{flexDirection:'row'}}>
+                                                                    <Text style={[styles.cardtextCss,{}]}>Time: </Text>
+                                                                    <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
+                                                                </View>
                                                             </View>
                                                             <View style={{flexDirection:'row'}}>
                                                                 <Text style={[styles.cardtextCss,{color:'#313955'}]}>Paid:</Text>
@@ -213,13 +214,15 @@ export function AgentDetails({route,navigation}) {
                                                         </View>
 
                                                         <View style={{flexDirection:'row',justifyContent:'space-around',margin:10,top:20}}>
-                                                            <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Date:</Text>
-                                                                <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
-                                                            </View>
-                                                            <View style={{flexDirection:'row'}}>
-                                                                <Text style={[styles.cardtextCss,{color:'#FCB301'}]}>Time:</Text>
-                                                                <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
+                                                            <View>
+                                                                <View style={{flexDirection:'row',bottom:5}}>
+                                                                    <Text style={[styles.cardtextCss,{}]}>Date: </Text>
+                                                                    <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_date}</Text>
+                                                                </View>
+                                                                <View style={{flexDirection:'row'}}>
+                                                                    <Text style={[styles.cardtextCss,{}]}>Time: </Text>
+                                                                    <Text style={[styles.cardtextCss,{color:'#313955'}]}>{item.created_time}</Text>
+                                                                </View>
                                                             </View>
                                                             <View style={{flexDirection:'row'}}>
                                                                 <Text style={[styles.cardtextCss,{color:'#313955'}]}>Paid:</Text>

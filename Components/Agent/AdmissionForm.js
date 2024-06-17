@@ -10,7 +10,6 @@ import {
   Dimensions
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
-import IconION from 'react-native-vector-icons/Ionicons';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_COURSE,API_GETRELIGION,API_GETCOMMUNITIES,API_GETBOARDS,
@@ -26,10 +25,8 @@ const windowHeight = Dimensions.get('window').height;
 
 export function AdmissionForm({route,navigation}) {
 
-  const runFirst = `window.ReactNativeWebView.postMessage("this is message from web");`;
-  
+  const runFirst = `window.ReactNativeWebView.postMessage("this is message from web");`;  
   const AllData = route['params']['LoginData']
-  console.log(AllData)
   const token  = AllData['token']
   const OrgID = route['params']['org_id']
   const [chosenDateFrom, setChosenDateFrom] = useState(new Date());
@@ -58,11 +55,20 @@ export function AdmissionForm({route,navigation}) {
     const [hscName,setHscName] = useState(null);
     const [stateBoardSubject,setStateBoardSubject] = useState(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [handleMsg,setHandleMsg ] = useState(false);
     // const [scholarshipdata,setScholarshipdata] =  useState([])
     const [showWebView, setShowWebView] = useState(true);
+    const [dateFormat,setDateFormat] = useState(0)
+    const [totalMark,setTotalMark] = useState(null)
 
+    
   const openWebView = () => {
-    setShowWebView(!showWebView);
+    onHandleSubmit()
+    if(handleMsg){
+      if(valuePayment.length != 0){
+        setShowWebView(!showWebView);     
+      }      
+    }
   };
 
     const handleInputChange = (key, value) => {
@@ -96,6 +102,13 @@ export function AdmissionForm({route,navigation}) {
       ]
     }
 
+  let total_mark = 0
+  if(inputValuesHSC.length !=0){
+    for (const [key, value] of Object.entries(inputValuesHSC)) {
+      total_mark = total_mark + Number(value)     
+    }
+  }
+
     if(selectedIndexManagement && valueCommunity!=4){
       scholarshipdata = [
         { name: 'PMSS', id: '2' },
@@ -103,11 +116,13 @@ export function AdmissionForm({route,navigation}) {
     }   
 
     const DatePickerExample = () => {
+      
       const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
     
         if (selectedDate) {
           setChosenDateFrom(selectedDate);
+          setDateFormat(1)
         }
       };
     
@@ -118,7 +133,7 @@ export function AdmissionForm({route,navigation}) {
       return (
         <TouchableOpacity onPress={showDatepicker} style={[styles.inputView,{alignItems:'center',justifyContent:'center'}]}>
               <Text style={{ fontSize: 13,fontWeight:'bold',color:'#1D2F59' }}>                
-                  {chosenDateFrom.toISOString().split('T')[0]}
+                  {dateFormat?chosenDateFrom.toISOString().split('T')[0]:null}
               </Text>  
           {showDatePicker && (
             <DateTimePicker
@@ -144,14 +159,7 @@ export function AdmissionForm({route,navigation}) {
         });
     }, []);
 
-
-    const admissonAppNavigation = () =>{
-      navigation.navigate('BottomTabStack',{
-        LoginData : AllData,
-        userid:AllData.id
-    })
-    }
-    
+   
 
     useEffect(() => {
       axios.post(API_GETCOMMUNITIES)
@@ -178,34 +186,12 @@ export function AdmissionForm({route,navigation}) {
         setValueCourse(response.data.data)
       })
       .catch(error => {  
-        // console.log(error)   
       });
   }, []);
 
 
-  useEffect(() => {
-    axios.post(API_PAYMENT,{
-      "user_id" : valueCourse[0].user_id,
-      "org_id" : OrgID,
-      "department_id" : valueCourseID,
-      "amount":valueCourseFees.fees,
-      "consultant_id" : AllData.id
-    },
-    {
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        },
-    })
-    .then(response => {
-      setValuePayment(response.data.data)
-    })
-    .catch(error => {  
-      // console.log(error)  
-    });
-}, [valueCourseID]);
-
       useEffect(() => {
+        if(valueCourseID != null){
         axios.post(API_COURSEFEES,{
           "org_id" : OrgID,
           "department_id" : valueCourseID
@@ -218,10 +204,31 @@ export function AdmissionForm({route,navigation}) {
         })
         .then(response => {
           setValueCourseFees(response.data.data)
+          axios.post(API_PAYMENT,{
+            "user_id" :2350,
+            "org_id" : OrgID,
+            "department_id" : valueCourseID,
+            "amount":response.data.data.fees,
+            "consultant_id" : AllData.id
+          },
+          {
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+              },
+          })
+          .then(response => {
+            setValuePayment(response.data.data)
+          })
+          .catch(error => { 
+          });
         })
-        .catch(error => {  
-          // console.log(error)  
+        .catch(error => { 
+          setValueCourseFees(null)
+          setErrorMsg(error.response.data.msg) 
+          setModalVisible(true)
         });
+      }
     }, [valueCourseID]);
 
   useEffect(() => {
@@ -271,6 +278,21 @@ export function AdmissionForm({route,navigation}) {
 
   }
 
+  let total_mark1 = 0
+  let maths = 0
+  let otherPer = 0
+  if(inputValuesHSC.length !=0){
+    for (const [key, value] of Object.entries(inputValuesHSC)) {
+      if(key == 'Maths'){
+        maths = value/2
+      }
+      else{
+        otherPer = value / 2
+        total_mark1 = total_mark1 + otherPer
+      }    
+    }
+  }
+
     const onHandleSubmit = async () =>{      
       inputValues['user_id'] = AllData.id
       inputValues['org_id'] = OrgID
@@ -284,6 +306,7 @@ export function AdmissionForm({route,navigation}) {
       inputValues['religion_id'] = valueReligion
       inputValues['community_id'] = valueCommunity
       inputValues['hsc_all_mark'] = inputValuesHSC
+      inputValues['total_mark'] = totalMark
       inputValues['is_first_graduate'] = valueFirstGradute
       const resp = await fetch(API_CREATEAGENT,{
         method: 'PUT',
@@ -298,6 +321,10 @@ export function AdmissionForm({route,navigation}) {
       {
         setErrorMsg(response.msg)
         setModalVisible(true)
+        setTimeout(() => {
+          setModalVisible(false)   
+          navigation.navigate('CollegeAgent')      
+        }, 2000) 
       }else{
         setErrorMsg(response.msg)
         setModalVisible(true)
@@ -617,13 +644,10 @@ export function AdmissionForm({route,navigation}) {
                           
                           <View style={{flexDirection:'row',width:'100%',margin:5}}>
                             <View style={styles.box}>
-                                <Text style={styles.fontcss}>Percentage</Text>
+                                  <Text style={styles.fontcss}>Percentage</Text>
                               </View>
                               <View style={styles.box}>
-                                <TextInput
-                                  style={styles.TextInput}     
-                                                     
-                                />
+                                <Text>{Number(maths)+Number(total_mark1)}</Text>
                               </View>
                           </View>                      
                         </View>
@@ -701,10 +725,9 @@ export function AdmissionForm({route,navigation}) {
                   onLoad={()=>setLoading(false)}
                   onMessage={(event)=> {
                     if(event.nativeEvent.title.split('/')[3] == 'redirectAppSuccess'){
-                      console.log(event.nativeEvent.title.split('/')[3])
-                      admissonAppNavigation()
+                      navigation.goBack()
                     }else if(event.nativeEvent.title.split('/')[3] == 'redirectAppFailure') {
-                      navigation.navigate('Login')
+                      navigation.goBack()
                     }
                   }}
                 />
@@ -886,10 +909,11 @@ export function AdmissionForm({route,navigation}) {
 
                     <Text style={styles.textcss}>Total Mark</Text>
                     <View style={[styles.inputView]}>
-                        <TextInput
-                        style={styles.TextInput}
-                        onChangeText={(text)=>handleInputChange('total_mark',text)}
-                        />
+                    <TextInput
+                            style={styles.TextInput}
+                            onChangeText={text => setTotalMark(text)}
+                            value={totalMark}
+                          />
                     </View>
                     
                     
@@ -929,29 +953,29 @@ export function AdmissionForm({route,navigation}) {
                         </View>                         
                 </View>                
             </View>
-            <View style={{padding:10,height:100,width:'90%',alignSelf:'center',backgroundColor:'#8BBFA6',margin:10,borderRadius:10}}>
-              <Text style={[styles.fontcss,{margin:10}]}>Admission Fee</Text>
+            {/* <View style={{padding:10,height:100,width:'90%',alignSelf:'center',backgroundColor:'#FCB301',margin:10,borderRadius:10}}>
+              <Text style={[styles.fontcss,{margin:10,fontSize:15}]}>Admission Fee</Text>
               <View style={{flexDirection:'row',padding:5,justifyContent:'space-between',marginRight:20}}> 
-                <Text style={[styles.fontcss,{fontWeight:'bold'}]}> One time Fee</Text>
-                <Text style={[styles.fontcss,{fontWeight:'bold'}]}>:</Text>
+                <Text style={[styles.fontcss,{fontWeight:'bold',fontSize:15}]}> One time Fee</Text>
+                <Text style={[styles.fontcss,{fontWeight:'bold',fontSize:15}]}>:</Text>
                 {
                   valueCourseFees?<Text style={[styles.fontcss,{fontWeight:'bold'}]}> Rs {valueCourseFees.fees}</Text>:null
                 }                
               </View>
 
-            </View>
+            </View> */}
               <View style={{flexDirection:'row',justifyContent:'space-around'}}>
-                <TouchableOpacity style={[styles.loginBtn,{width:'45%',backgroundColor:'#DDE5E1'}]} onPress={()=>onHandleSubmit()}>
-                    <Text style={[styles.loginText,{color:'#313955'}]} >
+                <TouchableOpacity style={[styles.loginBtn,{width:'90%'}]} onPress={()=>onHandleSubmit()}>
+                    <Text style={[styles.loginText,{color:'#FCB301'}]} >
                       Enquire
                     </Text>
                 </TouchableOpacity> 
                 
-                <TouchableOpacity style={[styles.loginBtn,{width:'45%'}]} onPress={()=>openWebView()}>
+                {/* <TouchableOpacity style={[styles.loginBtn,{width:'45%'}]} onPress={()=>openWebView()}>
                     <Text style={styles.loginText} >
                       Pay and Confirm
                     </Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
                               
                 </View>

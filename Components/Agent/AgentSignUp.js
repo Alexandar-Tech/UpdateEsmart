@@ -14,27 +14,20 @@ import Modal from "react-native-modal";
 import { Dropdown } from 'react-native-element-dropdown';
 import {API_CREATEAGENTAPI,API_UPDATEAGENT } from '../../APILIST/APILIST';
 import Checkbox from 'expo-checkbox';
-
-
+import { StatusBar } from 'expo-status-bar';
 
 export function AgentSignUp({route,navigation}) {
 
   const agentFormFull = route['params']['agentForm']
   let agentid = ''
   let phNumber = ''
-  let consultantid = ''
-  let token = ''
+  let consultantid = route['params']['consultantid']
+  let token = route['params']['token']
   if(agentFormFull){
     agentid = route['params']['agentid']
     phNumber = route['params']['number']
-    consultantid = route['params']['consultantid']
-    token = route['params']['token']
   }
-
-  
-  
-  
-    
+ 
     const [isChecked, setIsChecked] = useState(false);
     const [isFirstName, setisFirstName] = useState(null);
     const [isPhoneNumber, setPhoneNumber] = useState(phNumber);
@@ -53,30 +46,7 @@ export function AgentSignUp({route,navigation}) {
     }
 
     let valjson = {}
-    if(!agentFormFull){
-      valjson = {
-        "firstname" : isFirstName,
-          "lastname":isLastName,
-          "email":email,
-          "phone_no":phNumber,
-          "phone_code":'91',
-          'consultancy_agency_name':agencyName,
-          "type":"agent",
-          "consultant_id":consultantid,
-      }
-    }else{
-      valjson = {
-        "agent_id":agentid,
-        "firstname" :isFirstName,
-        "lastname" : isLastName,
-        "email" : email,
-        "phone_no" : phNumber,
-        "aadhar_number" : aadharNumber,
-        "state_id" : 35,
-        "city_id": 3703,
-        "address" : "Dindigul"
-      }
-    }
+    
     
     const Genderdata =  [
         { name: 'Male', id: '1' },
@@ -84,6 +54,32 @@ export function AgentSignUp({route,navigation}) {
     ]
 
     const fetchData = async () => {
+      
+      if(!agentFormFull){
+        valjson = {
+          "firstname" : isFirstName,
+            "lastname":isLastName,
+            "email":email,
+            "phone_no":isPhoneNumber,
+            "phone_code":'91',
+            'consultancy_agency_name':agencyName,
+            "type":"agent",
+            "consultant_id":consultantid,
+        }
+      }else{
+        valjson = {
+          "agent_id":agentid,
+          "firstname" :isFirstName,
+          "lastname" : isLastName,
+          "email" : email,
+          "phone_no" : isPhoneNumber,
+          "aadhar_number" : aadharNumber,
+          "state_id" : 35,
+          "city_id": 3703,
+          "address" : address
+        }
+      }
+      console.log(valjson)
       const resp = await fetch(API_URI,{
       method: 'POST',
       headers: {
@@ -95,15 +91,21 @@ export function AgentSignUp({route,navigation}) {
   
       })    
       const response = await resp.json();
+
       if (response.success == '1'){ 
         setErrorMsg(response.msg)
         setModalVisible(true)
-        if(response.data.agent_status == 'inactive'){
-          navigation.navigate('BottomTabStack',{
-            LoginData : response.data,
-            userid:response.data.parent_agent_id
-        })
-        } 
+
+        setTimeout(() => {
+          setModalVisible(false)   
+          if(response.data.agent_status == 'inactive'){
+            navigation.navigate('BottomTabStack',{
+              LoginData : response.data,
+              userid:response.data.parent_agent_id
+          })
+          }    
+        }, 2000) 
+        
     }else{
         setErrorMsg(response.msg)
         setModalVisible(true)
@@ -143,6 +145,7 @@ export function AgentSignUp({route,navigation}) {
       
     return(
         <View style={{flex:1,backgroundColor:'#F7F8FA'}}>
+          <StatusBar style='auto' />
             <View style={{flex:1,paddingBottom:20}}>
             <Modal 
                 isVisible={isModalVisible}
@@ -154,8 +157,7 @@ export function AgentSignUp({route,navigation}) {
                     <View style={styles.modelView}>
                     {
                         errorMsg?<Text style={{fontSize:15,fontWeight:'bold',top:30}}>{errorMsg}</Text>:null
-                    }
-                    
+                    }                    
                     <TouchableOpacity style={{top:70,height:50,width:'100%',alignSelf:'center',backgroundColor:'#313955',alignItems:'center',justifyContent:'center',borderRadius:10}} onPress={()=>setModalVisible(false)}>
                         <Text style={{color:'#fff',fontSize:18,fontWeight:'bold'}}>Ok</Text>
                     </TouchableOpacity>
@@ -187,7 +189,7 @@ export function AgentSignUp({route,navigation}) {
                     </View>
                     <View style={{flexDirection:'row'}}>
                         <View style={{width:'70%'}}>                                                
-                            <Text style={styles.textcss}>Last Name (Optional)</Text>
+                            <Text style={styles.textcss}>Last Name</Text>
                             <View style={[styles.inputView]}>
                                 <TextInput
                                 style={styles.TextInput}
@@ -213,24 +215,15 @@ export function AgentSignUp({route,navigation}) {
                                 placeholderTextColor="#003f5c"
                             />
                         </View>
-                        {
-                          agentFormFull?(
-                            <View style={[styles.inputView,{width:'62%',alignItems:'center',justifyContent:'center'}]}>
-                              <Text>{isPhoneNumber}</Text>
-                              </View>
-                          ):(
-                           
-                            <View style={[styles.inputView,{width:'62%',alignItems:'center',justifyContent:'center'}]}>
+                        <View style={[styles.inputView,{width:'62%',alignItems:'center',justifyContent:'center'}]}>
                               <TextInput
                                   style={styles.TextInput}
-                                  // placeholder="Phone Number"
-                                  // placeholderTextColor="#003f5c"
-                                  onChangeText={(text)=>setPhoneNumber(text)}
+                                  onChangeText={text => setPhoneNumber(text)}
+                                  value={isPhoneNumber}
+                                  inputMode="numeric"
+                                  maxLength={10}
                               />
                           </View>
-                            
-                          )
-                        }
                         
                     </View>
 

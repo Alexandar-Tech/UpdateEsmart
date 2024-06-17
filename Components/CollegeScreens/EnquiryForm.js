@@ -8,49 +8,98 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  ScrollView
+  ScrollView,
+  RefreshControl
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
 import Checkbox from 'expo-checkbox';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
-import { API_SAVEENQUIERY,API_GETRELIGION,API_GETCOMMUNITIES,API_GETBOARDS,API_GETBOARDSUBJECT } from '../../APILIST/APILIST';
+import { API_SAVEENQUIERY,API_GETRELIGION,API_GETCOMMUNITIES,API_GETBOARDS,API_GETBOARDSUBJECT,API_GETPROFILE } from '../../APILIST/APILIST';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Modal from "react-native-modal";
+import { StatusBar } from 'expo-status-bar';
 
 export function EnquiryForm({route,navigation}) {
+    const AllData = route.params.LoginData
     const [isChecked, setChecked] = useState(false);
-    const Coursename = route['params']['Coursename']
+    const OrgId = route.params.OrgId
+    const departmentId = route.params.departmentId
+    const Coursename = route.params.Coursename
     const [religion,setReligion] = useState([]);
     const [community,setCommunity] = useState([]);
     const [inputValues, setInputValues] = useState([]);
     const [chosenDateFrom, setChosenDateFrom] = useState(new Date());
-    const [isModalVisible,setisModalVisible] = useState(false)
+    const [isModalVisible, setModalVisible] = useState(false); 
     const [valueCommunity, setValueCommunity] = useState(null);
     const [valueStateBoard, setValueStateBoard] = useState(1);
     const [stateBoard,setStateBoard] = useState([]);
     const [stateBoardSubject,setStateBoardSubject] = useState(null);
     const [loading,setLoading] = useState(false)
+    const [hscName,setHscName] = useState(null);
+    const [inputValuesHSC, setInputValuesHSC] = useState([]);
+    const [isModalVisibleHSC,setisModalVisibleHSC] = useState(false)
+    const [valueReligion, setValueReligion] = useState(null);
+    const [errorMsg,setErrorMsg] = useState(null);
+    const [valueGender, setValueGender] = useState(null);
+    const [dateFormat,setDateFormat] = useState(0)
+    const [firstName,setFirstName] = useState(AllData.user_detail.firstname)
+    const [lastName,setLastName] = useState(AllData.user_detail.lastname)
+    const [email,setEmail] = useState(AllData.email)
+    const [fatherName,setFatherName] = useState(AllData.user_detail.father_name)
+    const [address,setAddress] = useState(AllData.user_detail.address)
+    const [totalMark,setTotalMark] = useState(null)
+    const [Profile,setProfile] = useState(null);
 
     const Genderdata =  [
       { name: 'Male', id: '1' },
       { name: 'Female', id: '2' },
     ]
 
+    const handleInputChangeHSC = (key, value) => {
+      
+      setInputValuesHSC((prevData) => {
+          const newData = { ...prevData };    
+          newData[key] = value;      
+          return newData;
+        });
+  };
     const Hscdata =  [
       { name: 'HSC Academic Marks', id: '1' },
       { name: 'HSC Vocational Marks', id: '2' },
     ]
 
-  const handleInputChange = (key, value) => {
-    setInputValues((prevData) => {
-        const newData = { ...prevData };      
-        newData[key] = value;      
-        return newData;
+    useEffect(() => {
+      axios.post(API_GETPROFILE,{
+          "user_id":AllData.id
+      })
+      .then(response => {
+          setProfile(response.data.data);
+          setFirstName(response.data.data.user_detail.firstname)
+          setLastName(response.data.data.user_detail.lastname)
+          setEmail(response.data.data.email)
+          setFatherName(response.data.data.user_detail.father_name)
+          setAddress(response.data.data.user_detail.address)
+      })
+      .catch(error => {
+          console.error('Error fetching data:', error);
       });
-  };
+  }, [route]);
 
-  const DatePickerExample = () => {
+  let maths = 0
+  let otherPer = 0
+  if(inputValuesHSC.length !=0){
+    for (const [key, value] of Object.entries(inputValuesHSC)) {
+      if(key == 'Maths'){
+        maths = value
+      }
+      else{
+        otherPer = value / 2
+      }    
+    }
+  }
+
+  const DatePickerExample = (val) => {
     
     const [showDatePicker, setShowDatePicker] = useState(false);
   
@@ -59,6 +108,7 @@ export function EnquiryForm({route,navigation}) {
   
       if (selectedDate) {
         setChosenDateFrom(selectedDate);
+        setDateFormat(1)
       }
     };
   
@@ -69,7 +119,7 @@ export function EnquiryForm({route,navigation}) {
     return (
       <TouchableOpacity onPress={showDatepicker} style={[styles.inputView,{alignItems:'center',justifyContent:'center'}]}>
             <Text style={{ fontSize: 13,fontWeight:'bold',color:'#1D2F59' }}>                
-                {chosenDateFrom.toISOString().split('T')[0]}
+            {dateFormat?chosenDateFrom.toISOString().split('T')[0]:val.val}
             </Text>  
         {showDatePicker && (
           <DateTimePicker
@@ -132,32 +182,115 @@ export function EnquiryForm({route,navigation}) {
     }, [valueStateBoard]);
 
     const onHandleSubmit = async () =>{
-      
-      inputValues['dob'] = chosenDateFrom.toISOString().split('T')[0]
-      inputValues['religion'] = 'HINDHU'
-      inputValues['community'] = 'SC'
-      inputValues['hsc'] = 'hsc'
-      inputValues['course_applied'] = Coursename
-      inputValues['total_mark'] = 80
-      inputValues['gender'] = 'male'
-      inputValues['org_id'] = 151
-      inputValues['department_id'] = '60'
+      if(!isChecked){
+        setErrorMsg('Please Check terms and Conditions !')
+        setModalVisible(true)
+        return
+    }
       const resp = await fetch(API_SAVEENQUIERY,{
         method: 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${AllData.token}`,
         },
-        body: JSON.stringify(inputValues)    
+        body: JSON.stringify({
+          'user_id' :AllData.id,
+            'org_id':OrgId,
+            'department_id' : departmentId,
+            'firstname':firstName,
+            'lastname':lastName,
+            'father_name':fatherName,
+            'email':email,
+            'phone_no': AllData.phone_no,
+            'address':address,
+            'gender':valueGender,
+            'dob':chosenDateFrom.toISOString().split('T')[0],
+            'religion_id':valueReligion,
+            'community_id':valueCommunity,
+            'hsc_all_mark':inputValuesHSC,
+            "total_mark":totalMark
+        })    
       })    
       const response = await resp.json();
       if(response.success == 1)
       {
-       Alert.alert(response.msg)
+        setErrorMsg(response.msg)
+        setModalVisible(true)      
+        setTimeout(() => {
+          setModalVisible(false)   
+          navigation.navigate('CollegeList')      
+        }, 2000)
       }else{
-        Alert.alert(response.msg)
+        setErrorMsg(response.msg)
+        setModalVisible(true)        
       }
     }
+
+
+    const DropdownComponentCommunity = (props) => {
+      
+      const [isFocus, setIsFocus] = useState(false);
+      let name = props.name
+      let valdata = props.dropDownData
+      return (
+        <View style={styles.container}>
+          <Dropdown
+            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            inputSearchStyle={styles.inputSearchStyle}
+            iconStyle={styles.iconStyle}
+            data={valdata}
+            search
+            maxHeight={300}
+            labelField= 'name'
+            valueField= 'id'
+            placeholder={!isFocus ?  name: '...'}
+            searchPlaceholder="Search..."
+            value={valueCommunity}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChange={item => {
+              setValueCommunity(item.id)
+              setIsFocus(false);
+            }}
+          />      
+        </View>
+      );
+    };
+
+
+    const DropdownComponent = (props) => {        
+      const [isFocus, setIsFocus] = useState(false);
+      let name = props.name
+      let valdata = props.dropDownData
+      return (
+        <View style={styles.container}>
+          <Dropdown
+            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            inputSearchStyle={styles.inputSearchStyle}
+            iconStyle={styles.iconStyle}
+            data={valdata}
+            search
+            maxHeight={300}
+            labelField= 'name'
+            valueField= 'id'
+            placeholder={!isFocus ?  name: '...'}
+            searchPlaceholder="Search..."
+            value={valueGender}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChange={item => {
+              setValueGender(item.id);
+              setIsFocus(false);
+            }}
+          />      
+        </View>
+      );
+    };
 
     const DropdownComponentStateBoard = (props) => {
       
@@ -190,114 +323,38 @@ export function EnquiryForm({route,navigation}) {
       );
     };
 
-
-    const DropdownComponentCommunity = (props) => {
-      
-      const [isFocus, setIsFocus] = useState(false);
-      let name = props.name
-      let valdata = props.dropDownData
-      return (
-        <View style={styles.container}>
-          <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={valdata}
-            search
-            maxHeight={300}
-            labelField= 'name'
-            valueField= 'id'
-            placeholder={!isFocus ?  name: '...'}
-            searchPlaceholder="Search..."
-            value={valueCommunity}
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-            onChange={item => {
-              setValueCommunity(item.id)
-              if(item.name == 'HSC Academic Marks'){
-                setisModalVisible(true);
-              }
-              setIsFocus(false);
-            }}
-          />      
-        </View>
-      );
-    };
-
-
-    const DropdownComponent = (props) => {
-      const [value, setValue] = useState(null);
-      const [isFocus, setIsFocus] = useState(false);
-      let name = props.name
-      let valdata = props.dropDownData
-      return (
-        <View style={styles.container}>
-          <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={valdata}
-            search
-            maxHeight={300}
-            labelField= 'name'
-            valueField= 'id'
-            placeholder={!isFocus ?  name: '...'}
-            searchPlaceholder="Search..."
-            value={value}
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-            onChange={item => {
-              setValue(item.id)
-              if(item.name == 'HSC Academic Marks'){
-                setisModalVisible(true);
-              }
-              setIsFocus(false);
-            }}
-          />      
-        </View>
-      );
-    };
-
-    const DropdownComponentGender = (props) => {
-      const [value, setValue] = useState(null);
-      const [isFocus, setIsFocus] = useState(false);
-      let name = props.name
-      let valdata = props.dropDownData
-      return (
-        <View style={styles.container}>
-          <Dropdown
-            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={valdata}
-            search
-            maxHeight={300}
-            labelField= 'name'
-            valueField= 'id'
-            placeholder={!isFocus ?  name: '...'}
-            searchPlaceholder="Search..."
-            value={value}
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-            onChange={item => {
-              setValue(item.id)
-              if(item.name == 'HSC Academic Marks'){
-                setisModalVisible(true);
-              }
-              setIsFocus(false);
-            }}
-          />      
-        </View>
-      );
-    };
-    
     const DropdownComponentReligion = (props) => {
+      const [isFocus, setIsFocus] = useState(false);
+      let name = props.name
+      let valdata = props.dropDownData
+      return (
+        <View style={styles.container}>
+          <Dropdown
+            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            inputSearchStyle={styles.inputSearchStyle}
+            iconStyle={styles.iconStyle}
+            data={valdata}
+            search
+            maxHeight={300}
+            labelField= 'name'
+            valueField= 'id'
+            placeholder={!isFocus ?  name: '...'}
+            searchPlaceholder="Search..."
+            value={valueReligion}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChange={item => {
+              setValueReligion(item.id);
+              setIsFocus(false);
+            }}
+          />      
+        </View>
+      );
+    };
+
+    const DropdownComponentHSC = (props) => {
       const [value, setValue] = useState(null);
       const [isFocus, setIsFocus] = useState(false);
       let name = props.name
@@ -322,9 +379,8 @@ export function EnquiryForm({route,navigation}) {
             onBlur={() => setIsFocus(false)}
             onChange={item => {
               setValue(item.id)
-              if(item.name == 'HSC Academic Marks'){
-                setisModalVisible(true);
-              }
+              setHscName(item.name)                
+              setisModalVisibleHSC(true);
               setIsFocus(false);
             }}
           />      
@@ -334,16 +390,15 @@ export function EnquiryForm({route,navigation}) {
       
     return(
         <View style={{flex:1,backgroundColor:'#F7F8FA',paddingBottom:20}}>
-          <Modal 
-            isVisible={isModalVisible}
-            style={styles.modelcontainer}
-            onBackdropPress={() => setisModalVisible(false)}
+          <StatusBar style='auto' />
+          
+            <Modal 
+            isVisible={isModalVisibleHSC}
+            style={styles.modelcontainerhsc}
+            onBackdropPress={() => setisModalVisibleHSC(false)}
             >
-                <View style={styles.modelView}>  
-                  <Text style={{textAlign:'center',fontSize:14,fontWeight:'bold'}}>HSC Academic Marks</Text>
-                  <View>
-                    <DropdownComponentStateBoard />
-                  </View>
+                <View style={styles.modelViewHsc}>  
+                  <Text style={{textAlign:'center',fontSize:15,fontWeight:'bold'}}>{hscName}</Text>                  
                   
                   <ScrollView style={{flex:1}}>
                     <View style={{padding:10}}> 
@@ -355,7 +410,10 @@ export function EnquiryForm({route,navigation}) {
                             <Text style={styles.textcss}>Mark Secured</Text>
                           </View>
                           {
-                            stateBoardSubject.map((item,index)=>(
+                            hscName == 'HSC Academic Marks'?
+                            
+                            stateBoardSubject.academic.map((item,index)=>(
+                              
                               <View key={index}>
                                 <View style={{flexDirection:'row',width:'100%',margin:5}}>
                                   <View style={styles.box}>
@@ -363,21 +421,36 @@ export function EnquiryForm({route,navigation}) {
                                     </View>
                                     <View style={styles.box}>
                                       <TextInput
-                                      style={styles.TextInput}                        
+                                        style={styles.TextInput}
+                                        onChangeText={(text)=>handleInputChangeHSC(item.subject,text)}                     
+                                      />
+                                    </View>
+                                </View>
+                              </View>
+                            )):
+                            stateBoardSubject.occasional.map((item,index)=>(
+                              <View key={index}>
+                                <View style={{flexDirection:'row',width:'100%',margin:5}}>
+                                  <View style={styles.box}>
+                                      <Text style={styles.fontcss}>{item.subject}</Text>
+                                    </View>
+                                    <View style={styles.box}>
+                                      <TextInput
+                                      style={styles.TextInput}  
+                                      onChangeText={(text)=>handleInputChangeHSC(item.subject,text)}                       
                                       />
                                     </View>
                                 </View>
                               </View>
                             ))
-                          }   
+                          }                       
+                          
                           <View style={{flexDirection:'row',width:'100%',margin:5}}>
                             <View style={styles.box}>
                                 <Text style={styles.fontcss}>Percentage</Text>
                               </View>
                               <View style={styles.box}>
-                                <TextInput
-                                style={styles.TextInput}                        
-                                />
+                                <Text>{Number(maths)+Number(otherPer)}</Text>
                               </View>
                           </View>                      
                         </View>
@@ -398,7 +471,7 @@ export function EnquiryForm({route,navigation}) {
                   </ScrollView>
                   {
                     loading?(
-                      <TouchableOpacity style={[styles.loginBtn,{width:'50%'}]}>
+                      <TouchableOpacity style={[styles.loginBtn,{width:'50%',backgroundColor:'#FCB301'}]} onPress={() => setisModalVisibleHSC(false)}>
                         <Text style={styles.loginText}>
                           Apply
                       </Text>                    
@@ -409,8 +482,25 @@ export function EnquiryForm({route,navigation}) {
                 </View>                          
                     
           </Modal>
+              <Modal 
+                  isVisible={isModalVisible}
+                  style={styles.modelcontainer}
+                  onBackdropPress={() => setModalVisible(false)}
+                  swipeDirection={['down']}
+                  onSwipeComplete={() => setModalVisible(false)}
+                  >
+                      <View style={styles.modelView}>
+                        {
+                          errorMsg?<Text style={{fontSize:15,fontWeight:'bold',top:30}}>{errorMsg}</Text>:null
+                        }
+                        
+                        <TouchableOpacity style={{top:70,height:50,width:'100%',alignSelf:'center',backgroundColor:'#313955',alignItems:'center',justifyContent:'center',borderRadius:10}} onPress={()=>setModalVisible(false)}>
+                          <Text style={{color:'#fff',fontSize:18,fontWeight:'bold'}}>Ok</Text>
+                        </TouchableOpacity>
+                      </View>
+                </Modal>
             <View style={{flex:1}}>
-            <View style={styles.headerPad}>
+            <View style={[styles.headerPad,{backgroundColor:'#313955'}]}>
                 <View style={styles.headpadCss}>
                     <TouchableOpacity onPress={()=>navigation.goBack()} style={{width:'20%'}}>
                         <View style={styles.headpad}>
@@ -425,13 +515,27 @@ export function EnquiryForm({route,navigation}) {
             </View>
             <ScrollView style={{flex:1}}>
                 <View style={{padding:10}}>
-                  <View>
-                    <Text style={styles.textcss}>Student Name</Text>
+                  {
+                    Profile?(
+                      <View>
+                        <View>
+                    <Text style={styles.textcss}>Student FirstName</Text>
                     </View>
                     <View style={[styles.inputView]}>
                         <TextInput
                         style={styles.TextInput}
-                        onChangeText={(text)=>handleInputChange('name',text)}
+                        onChangeText={text => setFirstName(text)}
+                        value={firstName}
+                        />
+                    </View>
+                    <View>
+                    <Text style={styles.textcss}>Student LasttName</Text>
+                    </View>
+                    <View style={[styles.inputView]}>
+                        <TextInput
+                        style={styles.TextInput}
+                        onChangeText={text => setLastName(text)}
+                        value={lastName}
                         />
                     </View>
                     <View style={{marginTop:20}}>
@@ -439,17 +543,15 @@ export function EnquiryForm({route,navigation}) {
                       <View style={[styles.inputView]}>
                           <TextInput
                             style={styles.TextInput}
-                            onChangeText={(text)=>handleInputChange('guardian_name',text)}
+                            onChangeText={text => setFatherName(text)}
+                            value={fatherName}
                           />
                       </View>
                     </View>
                     <View style={{marginTop:20}}>
                       <Text style={styles.textcss}>Mobile Number</Text>
                       <View style={[styles.inputView]}>
-                          <TextInput
-                            style={styles.TextInput}
-                            onChangeText={(text)=>handleInputChange('phone_number',text)}
-                          />
+                          <Text style={[styles.TextInput,{top:15,opacity:0.5}]}>{AllData.phone_no}</Text>
                       </View>
                     </View>
 
@@ -458,14 +560,15 @@ export function EnquiryForm({route,navigation}) {
                       <View style={[styles.inputView]}>
                           <TextInput
                             style={styles.TextInput}
-                            onChangeText={(text)=>handleInputChange('email',text)}
+                            onChangeText={text => setEmail(text)}
+                            value={email}
                           />
                       </View>
                     </View>
                     <View style={{marginTop:20}}>
                       <Text style={styles.textcss}>Date Of Birth</Text>
                       <View>
-                        <DatePickerExample />
+                        <DatePickerExample val={AllData.user_detail.dob_string}/>
                       </View>
                     </View>
                     <View style={{marginTop:20}}>
@@ -474,7 +577,9 @@ export function EnquiryForm({route,navigation}) {
                         <TextInput
                         style={styles.TextInput}
                         multiline={true}
-                        onChangeText={(text)=>handleInputChange('address',text)}
+                        onChangeText={text => setAddress(text)}
+                        value={address}
+                        
                         />
                     </View>
                     </View>
@@ -484,57 +589,82 @@ export function EnquiryForm({route,navigation}) {
                     </View> 
                     <Text style={styles.textcss}>Religion</Text>
                     <View style={{width:'100%',margin:20,alignSelf:'center'}} >
-                        <DropdownComponent name={'religion'} dropDownData={religion}/>
+                    <DropdownComponentReligion name={'Religion'} dropDownData={religion}/>
                     </View> 
                     <Text style={styles.textcss}>Community</Text>
                     <View style={{width:'100%',margin:20,alignSelf:'center'}}>
                         <DropdownComponentCommunity name={'community'} dropDownData={community}/>
                     </View>
+
+                    <Text style={styles.textcss}>Choose Board</Text>
+                    <View style={{width:'100%',margin:20,alignSelf:'center'}}>
+                        <DropdownComponentStateBoard />
+                    </View>
+
                     <Text style={styles.textcss}>HSC</Text>
                     <View style={{width:'100%',margin:20,alignSelf:'center'}}>
-                        <DropdownComponent name={'HSC'} dropDownData={Hscdata}/>
+                      <DropdownComponentHSC name={'HSC'} dropDownData={Hscdata}/>
                     </View>
                     <Text style={styles.textcss}>Total Mark</Text>
                     <View style={[styles.inputView]}>
-                        <TextInput
-                        style={styles.TextInput}
-                        onChangeText={(text)=>handleInputChange('total_mark',text)}
-                        />
-                    </View>
+                          <TextInput
+                            style={styles.TextInput}
+                            onChangeText={text => setTotalMark(text)}
+                            value={totalMark}
+                          />
+                      </View>
                     <View style={[styles.inputView,{height:100,backgroundColor:'#313955'}]}>
                         <Text style={{color:'#fff',fontSize:16,padding:10,fontWeight:'bold'}}>Course Applied</Text>
                         <View style={[styles.inputView,{backgroundColor:'#fff',bottom:20,justifyContent:'center'}]}>
                             <Text style={{color:'#313955',fontSize:16,padding:10,fontWeight:'bold'}}>{Coursename}</Text>
                         </View>
-                    </View>                    
+                    </View> 
+                        </View>
+
+                    ):(
+                      <View style={{marginTop:200}}>                            
+                            <ActivityIndicator size="large" color="#0000ff" />
+                      </View>
+                    )
+                  }
+                                     
                 </View>
             </ScrollView>
-            <View style={styles.section}>
-                <Checkbox
-                    style={styles.checkbox}
-                    value={isChecked}
-                    onValueChange={setChecked}
-                    color={isChecked ? '#FCB301' : undefined}
-                />
-                <View style={{padding:20,width:250}}>
-                    <View style={{flexDirection:'row'}}>
-                        <Text style={styles.fontcss}>By submitting this Enquiry you agree to the </Text>
-                        <Text style={[styles.fontcss,{color:'#FCB301'}]}>Terms & Conditions</Text>
+            {
+              Profile?(
+                <View>
+                  <View style={styles.section}>
+                    <Checkbox
+                        style={styles.checkbox}
+                        value={isChecked}
+                        onValueChange={setChecked}
+                        color={isChecked ? '#FCB301' : undefined}
+                    />
+                    <View style={{padding:20,width:250}}>
+                        <View style={{flexDirection:'row'}}>
+                            <Text style={styles.fontcss}>By submitting this Enquiry you agree to the </Text>
+                            <Text style={[styles.fontcss,{color:'#FCB301'}]}>Terms & Conditions</Text>
+                        </View>
+                        <View style={{flexDirection:'row'}}>                     
+                            <Text style={styles.fontcss}> and </Text>
+                            <Text style={[styles.fontcss,{color:'#FCB301'}]}>Privacy Policy</Text> 
+                            <Text style={styles.fontcss}>of Nizcrae</Text>
+                        </View>
                     </View>
-                    <View style={{flexDirection:'row'}}>                     
-                        <Text style={styles.fontcss}> and </Text>
-                        <Text style={[styles.fontcss,{color:'#FCB301'}]}>Privacy Policy</Text> 
-                        <Text style={styles.fontcss}>of Nizcrae</Text>
-                    </View>
+                    
+                </View>
+                <TouchableOpacity style={[styles.loginBtn,{backgroundColor:'#FCB301'}]} onPress={()=>onHandleSubmit()}>
+                    <Text style={[styles.loginText,{color:'#313955'}]}>
+                        Enquire
+                    </Text>
+                </TouchableOpacity> 
                 </View>
                 
-            </View>
+              ):null
+            }
             
-            <TouchableOpacity style={styles.loginBtn} onPress={()=>onHandleSubmit()}>
-                <Text style={styles.loginText}>
-                    Enquire
-                </Text>
-            </TouchableOpacity>            
+            
+                       
             </View>
         </View>
     )
@@ -596,7 +726,7 @@ const styles = StyleSheet.create({
       },
       loginText:{
         fontSize:18,
-        color:'#fff',
+        
         fontWeight:'bold'
       },
       inputView: {
@@ -661,7 +791,6 @@ const styles = StyleSheet.create({
       },
       selectedTextStyle: {
         fontSize: 16,
-        fontWeight:'bold'
       },
       iconStyle: {
         width: 20,
@@ -672,15 +801,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
       },
       modelcontainer:{
-        margin: 0,
-        justifyContent:'flex-end'
+        margin: 10,
+        justifyContent:'center'
       },
       modelView:{
         backgroundColor: 'white', 
         padding: 16,
-        height:'65%',
-        borderTopRightRadius:20,
-        borderTopLeftRadius:20,
+        height:200,
+        borderRadius:20,
+        alignItems:'center'
       },
       box:{
         height:50,
@@ -691,5 +820,16 @@ const styles = StyleSheet.create({
         justifyContent:'center',
         margin:5,
         backgroundColor:'#fff'
-      }
+      },
+      modelcontainerhsc:{
+        margin: 0,
+        justifyContent:'flex-end'
+      },
+      modelViewHsc:{
+        backgroundColor: 'white', 
+        padding: 16,
+        height:'65%',
+        borderTopRightRadius:20,
+        borderTopLeftRadius:20,
+      },
 })

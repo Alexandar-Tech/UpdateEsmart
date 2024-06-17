@@ -33,6 +33,9 @@ export function OTPScreen({route,navigation}) {
         }
       };
 
+      
+
+
       const ResendOTP = async () => {
         const resp = await fetch(API_SENTOTP,{
           method: 'POST',
@@ -63,7 +66,6 @@ export function OTPScreen({route,navigation}) {
         
             })    
             const response = await resp.json();
-            console.log(response)
             if (response.success == '1'){                             
                 if(response.is_register == 1){
                     navigation.navigate('AdmissionSignup',{
@@ -80,6 +82,16 @@ export function OTPScreen({route,navigation}) {
                         })
                         return
                     }
+
+                    if(PIN == 0 && response.data != undefined){
+                        navigation.navigate('PinScreen',{
+                          UserId:response.data.id,
+                          PIN:response.pin,
+                          number:PhoneNumber
+                      }) 
+                      return      
+                    }
+                    
                     if(response.msg == 'Your login successfully as owner'){
                         navigation.navigate('AgentAdmissionDetailS',{
                             LoginData : response.data,
@@ -105,10 +117,6 @@ export function OTPScreen({route,navigation}) {
 
       const ValidateOTP = () =>{
         let OTP = otp[0]+otp[1]+otp[2]+otp[3]
-        // if(OTP != '111111'){
-        //     Alert.alert('Please Enter Valid OTP !')
-        //     return
-        // }
         fetchData(OTP)
         
       }
